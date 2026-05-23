@@ -38,3 +38,15 @@ def test_depth_and_imbalance() -> None:
     assert metrics.top_n_ask_depth == Decimal("2")
     assert metrics.top_n_imbalance == Decimal("0.2")
     assert imbalance(Decimal("0"), Decimal("0")) == Decimal("0")
+
+
+def test_empty_order_book_has_no_prices_and_zero_depth() -> None:
+    metrics = calculate_metrics(OrderBook("BTC-USD"), levels=10)
+
+    assert metrics.best_bid is None
+    assert metrics.best_ask is None
+    assert metrics.spread is None
+    assert metrics.mid_price is None
+    assert metrics.top_n_bid_depth == Decimal("0")
+    assert metrics.top_n_ask_depth == Decimal("0")
+    assert metrics.top_n_imbalance == Decimal("0")
