@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "soteria"
+version = "0.1.0"
+description = "Live Coinbase order-book analytics and market-stress classification in the terminal."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "rich>=13.7",
+    "websockets>=12.0",
+]
+
+[project.optional-dependencies]
+ml = [
+    "tensorflow>=2.16",
+]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "tensorflow>=2.16",
+]
+
+[project.scripts]
+soteria = "soteria.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["src"]
