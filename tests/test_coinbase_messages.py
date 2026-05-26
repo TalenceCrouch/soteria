@@ -35,6 +35,22 @@ def test_unknown_or_invalid_messages_are_ignored_safely() -> None:
     assert parse_message("{not-json") == ()
 
 
+def test_malformed_level2_container_shapes_are_ignored_safely() -> None:
+    assert parse_message("[]") == ()
+    assert parse_message({"channel": "l2_data", "events": None}) == ()
+    assert (
+        parse_message(
+            {
+                "channel": "l2_data",
+                "events": [
+                    {"type": "update", "product_id": "BTC-USD", "updates": None},
+                ],
+            }
+        )
+        == ()
+    )
+
+
 def test_public_subscriptions_never_include_credentials() -> None:
     subscriptions = subscription_messages("BTC-USD")
 

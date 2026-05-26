@@ -69,21 +69,26 @@ def parse_message(raw_message: str | Mapping[str, Any]) -> tuple[Level2Event, ..
         message = json.loads(raw_message) if isinstance(raw_message, str) else raw_message
     except json.JSONDecodeError:
         return ()
-    if message.get("channel") not in {"l2_data", "level2"}:
+    if not isinstance(message, Mapping) or message.get("channel") not in {"l2_data", "level2"}:
+        return ()
+
+    raw_events = message.get("events", [])
+    if not isinstance(raw_events, list):
         return ()
 
     parsed_events: list[Level2Event] = []
-    for raw_event in message.get("events", []):
+    for raw_event in raw_events:
         if not isinstance(raw_event, Mapping):
             continue
         kind = raw_event.get("type")
         product_id = raw_event.get("product_id")
         if kind not in {"snapshot", "update"} or not isinstance(product_id, str):
             continue
+        raw_updates = raw_event.get("updates", [])
+        if not isinstance(raw_updates, list):
+            continue
         updates = tuple(
-            update
-            for payload in raw_event.get("updates", [])
-            if (update := _parse_update(payload)) is not None
+            update for payload in raw_updates if (update := _parse_update(payload)) is not None
         )
         parsed_events.append(
             Level2Event(kind=kind, product_id=product_id, updates=updates)  # type: ignore[arg-type]
