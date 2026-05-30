@@ -15,6 +15,18 @@ from soteria.config import DEFAULT_LEVELS, DEFAULT_MODEL_PATH, DEFAULT_PRODUCT, 
 from soteria.ml import train_model
 
 
+def _positive_int(value: str) -> int:
+    """Parse positive integer CLI options with argparse-friendly errors."""
+
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be a positive integer") from exc
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return parsed
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the top-level command parser."""
 
@@ -26,14 +38,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     watch = commands.add_parser("watch", help="Watch a live public level2 order book.")
     watch.add_argument("product", nargs="?", default=DEFAULT_PRODUCT, choices=SUPPORTED_PRODUCTS)
-    watch.add_argument("--levels", type=int, default=DEFAULT_LEVELS)
+    watch.add_argument("--levels", type=_positive_int, default=DEFAULT_LEVELS)
     watch.add_argument("--raw", action="store_true", help="Print raw WebSocket payloads.")
     watch.add_argument("--ml", action="store_true", help="Enable trained stress classification.")
     watch.add_argument("--model", type=Path, default=DEFAULT_MODEL_PATH)
 
     collect = commands.add_parser("collect", help="Collect rolling public-market features to CSV.")
     collect.add_argument("product", nargs="?", default=DEFAULT_PRODUCT, choices=SUPPORTED_PRODUCTS)
-    collect.add_argument("--seconds", type=int, required=True)
+    collect.add_argument("--seconds", type=_positive_int, required=True)
     collect.add_argument("--out", type=Path, required=True)
 
     train = commands.add_parser("train", help="Train a Keras market-stress classifier.")
@@ -49,8 +61,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     console = Console(stderr=True)
     try:
         if args.command == "watch":
-            if args.levels <= 0:
-                raise ValueError("--levels must be positive.")
             if args.raw and args.ml:
                 raise ValueError("--raw and --ml cannot be used together.")
             asyncio.run(
